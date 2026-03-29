@@ -1,0 +1,24 @@
+services:
+  qwen3-asr-server:
+    image: peteh/qwen3-asr-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qwen3-asr-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Cache Hugging Face models to avoid re-downloading on container restart
+      - ./hf_cache:/root/.cache/huggingface
+    environment:
+      # Set HF_HOME to use the mounted volume for model caching
+      - HF_HOME=/root/.cache/huggingface
+      # Optional: Set logging level
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
